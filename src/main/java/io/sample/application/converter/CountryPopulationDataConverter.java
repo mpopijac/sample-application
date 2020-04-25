@@ -3,15 +3,23 @@ package io.sample.application.converter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sample.application.data.CountryPopulationData;
 
 @Component
 public class CountryPopulationDataConverter implements Converter<JsonNode, List<CountryPopulationData>>
 {
+    private static final Logger LOG = LoggerFactory.getLogger(CountryPopulationDataConverter.class);
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Override
     public List<CountryPopulationData> convert(final JsonNode jsonNode)
     {
@@ -22,22 +30,13 @@ public class CountryPopulationDataConverter implements Converter<JsonNode, List<
 
     private Optional<CountryPopulationData> createCountryPopulationData(final JsonNode jsonNode)
     {
-        if (jsonNode.hasNonNull("country")
-            && jsonNode.get("country").hasNonNull("value")
-            && jsonNode.has("countryiso3code"))
+        try
         {
-            final CountryPopulationData countryPopulationData = new CountryPopulationData();
-            countryPopulationData.setCountry(jsonNode.get("country").get("value").asText());
-            countryPopulationData.setCountryIso3Code(jsonNode.get("countryiso3code").asText());
-            if (jsonNode.hasNonNull("value"))
-            {
-                countryPopulationData.setPopulation(jsonNode.get("value").asLong());
-            }
-            else
-            {
-                countryPopulationData.setPopulation(0L);
-            }
-            return Optional.of(countryPopulationData);
+            return Optional.of(objectMapper.treeToValue(jsonNode, CountryPopulationData.class));
+        }
+        catch (final JsonProcessingException e)
+        {
+            LOG.error(e.getMessage(), e);
         }
         return Optional.empty();
     }
