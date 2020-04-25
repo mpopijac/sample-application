@@ -14,6 +14,8 @@ import io.sample.application.service.WorldPopulationService;
 @Component
 public class WorldPopulationFacadeImpl implements WorldPopulationFacade
 {
+    private static final Long DEFAULT_LIMIT = 3L;
+
     private final WorldPopulationService worldPopulationService;
 
     @Autowired
@@ -39,10 +41,8 @@ public class WorldPopulationFacadeImpl implements WorldPopulationFacade
                 .collect(Collectors.toList());
         }
 
-        if (Objects.nonNull(limit))
-        {
-            countriesPopulationData = countriesPopulationData.stream().limit(limit).collect(Collectors.toList());
-        }
-        return countriesPopulationData;
+        return countriesPopulationData.stream()
+            .limit(Objects.nonNull(limit) ? limit : DEFAULT_LIMIT)
+            .collect(Collectors.toList());
     }
 }
